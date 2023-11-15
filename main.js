@@ -48,14 +48,17 @@ Sketch.prototype.createModel = function() {
 }
 
 Sketch.prototype.fragment = function() {
+    // Fragment Shaders are responsible for colors
     return `
         varying float vNoise; // <-- This is how we connect vertex shader with fragment shader & vice versa (naming convention for varying starts with "v")
+        varying vec2 vUv;
 
         void main() {
             vec3 color1 = vec3(0.5, 0.5, 1.);
             vec3 color2 = vec3(1., 0., 1.);
             vec3 finalColor = mix(color1, color2, vNoise);
-            gl_FragColor = vec4(finalColor, 1.);
+            // gl_FragColor = vec4(finalColor, 1.);
+            gl_FragColor = vec4(vUv, 0., 1.);
         }
     `;
 }
@@ -142,16 +145,20 @@ Sketch.prototype.vertex = function() {
 
         uniform float time; // <-- This is how we pass a value from our JS to our vertex shader
         varying float vNoise; // <-- This is how we connect vertex shader with fragment shader (naming convention for varying starts with "v")
+        varying vec2 vUv; // <-- THREE JS does boot some code for "Uv"
 
         void main() {
             vec3 newposition = position;
             float PI = 3.1415925;
-            // newposition.z += 0.1 * sin((newposition.x + 0.25 + time*0.05) * 2. * PI);
-
             float noise = cnoise(vec3(position.x * 4., position.y * 4. + (time*0.05), 0.));
-            newposition.z += 0.1 * noise;
-            vNoise = noise;
+            float dist = distance(uv, vec2(0.5));
 
+            vNoise = noise;
+            vUv = uv;
+
+            newposition.z += 0.1 * sin((dist * 25.) - time*0.2);
+            // newposition.z += 0.1 * noise;
+            
 
             gl_Position = projectionMatrix * modelViewMatrix * vec4(newposition, 1.0);
         }
